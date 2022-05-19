@@ -5,7 +5,7 @@ fn dyn_greeter_factory<'a, T: Display + ?Sized>(
     name: &'a T,
     comment: &'a T,
 ) -> Box<dyn Fn() -> String + 'a> {
-    Box::new(move || format!("{}, {} {}", greeting, name, comment))
+    Box::new(move || format!("{} {}, {}", greeting, name, comment))
 }
 
 fn impl_greeter_factory<'a, T: Display + ?Sized>(
@@ -14,7 +14,7 @@ fn impl_greeter_factory<'a, T: Display + ?Sized>(
     comment: &'a T,
     // this return type can be impl or a trait object
 ) -> impl Fn() -> String + 'a {
-    move || format!("{}, {} {}", greeting, name, comment)
+    move || format!("{} {}, {}", greeting, name, comment)
 }
 
 fn dyn_caller<'a, T: Display + ?Sized>(
@@ -37,9 +37,13 @@ fn impl_caller<'a, T: Display + ?Sized, U: Fn() -> String>(
     // greeter: impl Fn(&'a T, &'a T, &'a str) -> Box<dyn Fn() -> String>,
     // We can actually use generics to solve our problem (instead of create more here:)
     greeter: impl Fn(&'a T, &'a T, &'a str) -> U,
+    // Finally let's see if we can say that the function returns a function pointer. It doesn't, so this fails.
+    // greeter: impl Fn(&'a T, &'a T, &'a str)-> fn()->String,
     greeting: &'a T,
     name: &'a T,
 ) -> impl Fn() -> String {
+    // use this hack to figure out what U got cast as? Nope! It's a closure. Good luck typing it
+    // println!("{}", std::any::type_name::<U>());
     greeter(
         greeting,
         name,
@@ -48,11 +52,11 @@ fn impl_caller<'a, T: Display + ?Sized, U: Fn() -> String>(
 }
 
 fn main() {
-    let dyn_ = dyn_caller(Box::new(dyn_greeter_factory), "hi", "becc");
+    let dyn_ = dyn_caller(Box::new(dyn_greeter_factory), "hi", "ferris");
     let dyn_call = dyn_();
     println!("{}", dyn_call);
 
-    let impl_ = impl_caller(impl_greeter_factory, "hi", "friend");
+    let impl_ = impl_caller(impl_greeter_factory, "hi", "ferris");
     let impl_call = impl_();
     println!("{}", impl_call);
 }
