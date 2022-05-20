@@ -23,11 +23,7 @@ fn dyn_caller<'a, T: Display + ?Sized>(
     greeting: &'a T,
     name: &'a T,
 ) -> Box<dyn Fn() -> String> {
-    greeter(
-        greeting,
-        name,
-        &"I'm slower but more flexible at runtime :)",
-    )
+    greeter(greeting, name, "I'm slower but more flexible at runtime :)")
 }
 
 fn impl_caller<'a, T: Display + ?Sized, U: Fn() -> String>(
@@ -47,7 +43,7 @@ fn impl_caller<'a, T: Display + ?Sized, U: Fn() -> String>(
     greeter(
         greeting,
         name,
-        &"I'm faster but take more space because of monomorphization :)",
+        "I'm faster but take more space because of monomorphization :)",
     )
 }
 
@@ -55,7 +51,6 @@ fn main() {
     let dyn_ = dyn_caller(Box::new(dyn_greeter_factory), "hi", "ferris");
     let dyn_call = dyn_();
     println!("{}", dyn_call);
-
     let impl_ = impl_caller(impl_greeter_factory, "hi", "ferris");
     let impl_call = impl_();
     println!("{}", impl_call);
